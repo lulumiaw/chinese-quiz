@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國語文素養命題系統</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f6f3;
+    --bg-tertiary: #f0efe9;
+    --text-primary: #1a1a18;
+    --text-secondary: #5a5a56;
+    --text-tertiary: #9a9994;
+    --border: rgba(0,0,0,0.12);
+    --border-hover: rgba(0,0,0,0.25);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --c-blue: #185FA5;
+    --c-blue-bg: #E6F1FB;
+    --c-blue-mid: #B5D4F4;
+    --c-green: #3B6D11;
+    --c-green-bg: #EAF3DE;
+    --c-amber: #BA7517;
+    --c-amber-bg: #FAEEDA;
+    --c-coral: #993C1D;
+    --c-coral-bg: #FAECE7;
+    --c-purple: #534AB7;
+    --c-purple-bg: #EEEDFE;
+    --font: -apple-system, 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1e1e1c;
+      --bg-secondary: #282824;
+      --bg-tertiary: #2e2e2a;
+      --text-primary: #f0efe8;
+      --text-secondary: #a8a89e;
+      --text-tertiary: #6a6a62;
+      --border: rgba(255,255,255,0.12);
+      --border-hover: rgba(255,255,255,0.25);
+      --c-blue: #85B7EB;
+      --c-blue-bg: #042C53;
+      --c-blue-mid: #0C447C;
+      --c-green: #97C459;
+      --c-green-bg: #173404;
+      --c-amber: #EF9F27;
+      --c-amber-bg: #412402;
+      --c-coral: #F0997B;
+      --c-coral-bg: #4A1B0C;
+      --c-purple: #AFA9EC;
+      --c-purple-bg: #26215C;
+    }
+  }
+
+  html, body { min-height: 100vh; background: var(--bg-tertiary); font-family: var(--font); color: var(--text-primary); font-size: 16px; line-height: 1.6; }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+  /* Header */
+  .app-header { text-align: center; margin-bottom: 2rem; }
+  .app-header .logo { display: inline-flex; align-items: center; gap: 10px; background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: 40px; padding: 8px 20px; margin-bottom: 1rem; }
+  .app-header .logo svg { width: 20px; height: 20px; color: var(--c-blue); }
+  .app-header .logo span { font-size: 13px; font-weight: 500; color: var(--c-blue); }
+  .app-header h1 { font-size: 26px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+  .app-header p { font-size: 14px; color: var(--text-secondary); }
+
+  /* Stepper */
+  .stepper { display: flex; background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem; }
+  .step-item { flex: 1; padding: 12px 6px; text-align: center; background: var(--bg-secondary); border-right: 0.5px solid var(--border); cursor: pointer; transition: background 0.15s; position: relative; }
+  .step-item:last-child { border-right: none; }
+  .step-item .sn { font-size: 10px; color: var(--text-tertiary); margin-bottom: 3px; letter-spacing: 0.05em; }
+  .step-item .sl { font-size: 12px; color: var(--text-secondary); }
+  .step-item.active { background: var(--c-blue-bg); }
+  .step-item.active .sn, .step-item.active .sl { color: var(--c-blue); }
+  .step-item.active .sl { font-weight: 500; }
+  .step-item.done { background: var(--bg-primary); }
+  .step-item.done::after { content: '✓'; position: absolute; top: 8px; right: 8px; font-size: 10px; color: var(--c-green); }
+
+  /* Cards */
+  .card { background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem; }
+  .card-title { font-size: 15px; font-weight: 500; color: var(--text-primary); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; }
+  .card-title .icon { width: 20px; height: 20px; color: var(--c-blue); flex-shrink: 0; }
+
+  /* Upload */
+  .upload-area { border: 1.5px dashed var(--border-hover); border-radius: var(--radius-md); padding: 2.5rem 1.5rem; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+  .upload-area:hover { background: var(--bg-secondary); border-color: var(--c-blue); }
+  .upload-area svg { width: 40px; height: 40px; color: var(--text-tertiary); margin-bottom: 12px; }
+  .upload-area .up-title { font-size: 14px; color: var(--text-primary); margin-bottom: 4px; }
+  .upload-area .up-sub { font-size: 12px; color: var(--text-tertiary); }
+  #fileInput { display: none; }
+  .file-info { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--c-green-bg); border-radius: var(--radius-md); font-size: 13px; color: var(--c-green); margin-top: 10px; }
+  .file-info svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .or-divider { display: flex; align-items: center; gap: 12px; margin: 1.25rem 0; }
+  .or-divider hr { flex: 1; border: none; border-top: 0.5px solid var(--border); }
+  .or-divider span { font-size: 12px; color: var(--text-tertiary); }
+
+  textarea { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; font-size: 14px; color: var(--text-primary); background: var(--bg-primary); resize: vertical; min-height: 150px; font-family: var(--font); line-height: 1.7; transition: border-color 0.15s; }
+  textarea:focus { outline: none; border-color: var(--c-blue); }
+  textarea::placeholder { color: var(--text-tertiary); }
+
+  /* Settings */
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 500px) { .settings-grid { grid-template-columns: 1fr; } }
+  .form-group label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px; font-weight: 500; }
+  select { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 9px 12px; font-size: 13px; color: var(--text-primary); background: var(--bg-primary); font-family: var(--font); cursor: pointer; transition: border-color 0.15s; }
+  select:focus { outline: none; border-color: var(--c-blue); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border-hover); background: transparent; color: var(--text-primary); transition: all 0.15s; font-family: var(--font); text-decoration: none; }
+  .btn:hover { background: var(--bg-secondary); }
+  .btn:active { transform: scale(0.98); }
+  .btn svg { width: 16px; height: 16px; }
+  .btn-primary { background: var(--c-blue); color: #ffffff; border-color: var(--c-blue); }
+  .btn-primary:hover { background: #0C447C; border-color: #0C447C; color: #fff; }
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
+  .btn-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; flex-wrap: wrap; }
+
+  /* Loading */
+  .loading-box { background: var(--c-blue-bg); border: 0.5px solid var(--c-blue-mid); border-radius: var(--radius-md); padding: 2rem; text-align: center; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--c-blue-mid); border-top-color: var(--c-blue); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-box .load-msg { font-size: 14px; color: var(--c-blue); }
+  .loading-box .load-sub { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+  /* Result */
+  .result-box { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; font-size: 13px; color: var(--text-primary); line-height: 1.85; max-height: 420px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+
+  /* PIRLS Grid */
+  .pirls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .pirls-item { padding: 12px 14px; border-radius: var(--radius-md); }
+  .pirls-item .pi-label { font-size: 11px; font-weight: 500; margin-bottom: 4px; }
+  .pirls-item .pi-count { font-size: 28px; font-weight: 500; line-height: 1; }
+  .pirls-item .pi-unit { font-size: 12px; opacity: 0.75; }
+
+  /* Text preview */
+  .text-preview { background: var(--bg-secondary); border-left: 3px solid var(--c-blue); padding: 12px 16px; border-radius: 0 var(--radius-md) var(--radius-md) 0; font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem; max-height: 100px; overflow: hidden; position: relative; }
+  .text-preview::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 28px; background: linear-gradient(transparent, var(--bg-secondary)); pointer-events: none; }
+
+  /* Tabs */
+  .tab-bar { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 1rem; gap: 0; }
+  .tab { padding: 9px 18px; font-size: 13px; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; transition: all 0.15s; font-family: var(--font); background: none; border-top: none; border-left: none; border-right: none; }
+  .tab.active { color: var(--c-blue); border-bottom-color: var(--c-blue); font-weight: 500; }
+
+  /* Quality score */
+  .quality-score-card { display: flex; align-items: center; gap: 16px; padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1rem; }
+  .qs-num { font-size: 40px; font-weight: 500; line-height: 1; }
+  .qs-label { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .qs-sub { font-size: 12px; color: var(--text-secondary); }
+  .qs-badges { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* Badges */
+  .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .badge-blue { background: var(--c-blue-bg); color: var(--c-blue); }
+  .badge-green { background: var(--c-green-bg); color: var(--c-green); }
+  .badge-amber { background: var(--c-amber-bg); color: var(--c-amber); }
+
+  /* Export bar */
+  .export-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1rem; }
+
+  /* Panel */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Error */
+  .error-box { background: var(--c-coral-bg); border: 0.5px solid var(--c-coral); border-radius: var(--radius-md); padding: 1rem 1.25rem; font-size: 13px; color: var(--c-coral); }
+
+  /* Scroll */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3L2 7l10 4 10-4-10-4zM2 17l10 4 10-4M2 12l10 4 10-4"/></svg>
+      <span>PIRLS 素養導向命題</span>
+    </div>
+    <h1>國語文閱讀素養命題系統</h1>
+    <p>上傳文章 → 文本分析 → 命題規劃 → 生成試題 → 品質驗證</p>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper" id="stepper">
+    <div class="step-item active" data-step="0">
+      <div class="sn">STEP 1</div>
+      <div class="sl">上傳文章</div>
+    </div>
+    <div class="step-item" data-step="1">
+      <div class="sn">STEP 2</div>
+      <div class="sl">文本分析</div>
+    </div>
+    <div class="step-item" data-step="2">
+      <div class="sn">STEP 3</div>
+      <div class="sl">命題規劃</div>
+    </div>
+    <div class="step-item" data-step="3">
+      <div class="sn">STEP 4</div>
+      <div class="sl">生成試題</div>
+    </div>
+    <div class="step-item" data-step="4">
+      <div class="sn">STEP 5</div>
+      <div class="sl">品質驗證</div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 1: Upload ===== -->
+  <div class="panel active" id="panel-0">
+    <div class="card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        上傳文章
+      </div>
+
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()" id="uploadArea">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <div class="up-title">點擊上傳 PDF 或圖片</div>
+        <div class="up-sub">支援 .pdf / .jpg / .png / .webp，最大 10MB</div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="handleFile(this)">
+      <div id="fileInfo" style="display:none;"></div>
+
+      <div class="or-divider"><hr><span>或直接貼上文字</span><hr></div>
+
+      <textarea id="textInput" placeholder="請在此貼上文章內容…（建議 300 字以上，支援記敘文、說明文、議論文、新聞、廣告等各類文體）"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        出題設定
+      </div>
+      <div class="settings-grid">
+        <div class="form-group">
+          <label>適用年級</label>
+          <select id="gradeLevel">
+            <option value="elementary_low">國小低年級（1–2年級）</option>
+            <option value="elementary_mid" selected>國小中年級（3–4年級）</option>
+            <option value="elementary_high">國小高年級（5–6年級）</option>
+            <option value="junior">國中（7–9年級）</option>
+            <option value="senior">高中</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>主要題數</label>
+          <select id="questionCount">
+            <option value="5">5 題</option>
+            <option value="10" selected>10 題</option>
+            <option value="15">15 題</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>題型比例</label>
+          <select id="questionType">
+            <option value="7mc3sa" selected>選擇題 7 + 簡答題 3</option>
+            <option value="5mc5sa">選擇題 5 + 簡答題 5</option>
+            <option value="all_mc">全選擇題</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>雙文本比較題</label>
+          <select id="dualText">
+            <option value="yes" selected>是（另加 3 題）</option>
+            <option value="no">否</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="startAnalysis()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        開始分析文本
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: Analysis ===== -->
+  <div class="panel" id="panel-1">
+    <div class="card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        文本分析
+      </div>
+      <div id="analysisLoading" class="loading-box">
+        <div class="spinner"></div>
+        <div class="load-msg" id="analysisMsg">正在解析文本結構…</div>
+        <div class="load-sub">AI 進行 PIRLS 四層次分析，請稍候</div>
+      </div>
+      <div id="analysisResult" style="display:none;">
+        <div id="textPreview" class="text-preview"></div>
+        <div id="analysisContent" class="result-box"></div>
+      </div>
+      <div id="analysisError" style="display:none;"></div>
+    </div>
+    <div class="btn-row" id="analysisActions" style="display:none;">
+      <button class="btn" onclick="goStep(0)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        重新上傳
+      </button>
+      <button class="btn btn-primary" onclick="startPlanning()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        確認並規劃命題
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: Planning ===== -->
+  <div class="panel" id="panel-2">
+    <div class="card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        命題藍圖
+      </div>
+      <div id="planningLoading" class="loading-box">
+        <div class="spinner"></div>
+        <div class="load-msg">正在建立命題藍圖…</div>
+        <div class="load-sub">規劃 PIRLS 能力分布與難度結構</div>
+      </div>
+      <div id="planningResult" style="display:none;">
+        <div class="pirls-grid" id="pirls-grid"></div>
+        <div id="planningContent" class="result-box"></div>
+      </div>
+      <div id="planningError" style="display:none;"></div>
+    </div>
+    <div class="btn-row" id="planningActions" style="display:none;">
+      <button class="btn" onclick="goStep(1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返回分析
+      </button>
+      <button class="btn btn-primary" onclick="startGeneration()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        確認並開始出題
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 4: Generation ===== -->
+  <div class="panel" id="panel-3">
+    <div class="card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        閱讀測驗題目
+      </div>
+      <div id="generationLoading" class="loading-box">
+        <div class="spinner"></div>
+        <div class="load-msg" id="genMsg">正在生成閱讀測驗題目…</div>
+        <div class="load-sub">依 PIRLS 比例與素養導向規格出題</div>
+      </div>
+      <div id="generationResult" style="display:none;">
+        <div class="tab-bar">
+          <button class="tab active" onclick="showTab('main',this)">主要題組</button>
+          <button class="tab" onclick="showTab('dual',this)" id="dualTabBtn">雙文本比較（3題）</button>
+        </div>
+        <div id="tab-main"></div>
+        <div id="tab-dual" style="display:none;"></div>
+      </div>
+      <div id="generationError" style="display:none;"></div>
+    </div>
+    <div class="btn-row" id="generationActions" style="display:none;">
+      <button class="btn" onclick="goStep(2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返回規劃
+      </button>
+      <button class="btn btn-primary" onclick="startQuality()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        確認並驗證品質
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 5: Quality ===== -->
+  <div class="panel" id="panel-4">
+    <div class="card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        命題品質驗證
+      </div>
+      <div id="qualityLoading" class="loading-box">
+        <div class="spinner"></div>
+        <div class="load-msg">正在進行命題品質審查…</div>
+        <div class="load-sub">逐題檢核素養導向標準</div>
+      </div>
+      <div id="qualityResult" style="display:none;">
+        <div id="qualityScoreCard"></div>
+        <div id="qualityContent" class="result-box"></div>
+      </div>
+      <div id="qualityError" style="display:none;"></div>
+    </div>
+    <div id="qualityActions" style="display:none;">
+      <div class="export-bar">
+        <button class="btn btn-sm" onclick="exportText()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          匯出純文字
+        </button>
+        <button class="btn btn-sm" onclick="copyAll()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          複製全部題目
+        </button>
+        <button class="btn btn-sm" onclick="restartAll()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          重新開始
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+const GRADE_LABELS = {
+  elementary_low: '國小低年級',
+  elementary_mid: '國小中年級',
+  elementary_high: '國小高年級',
+  junior: '國中',
+  senior: '高中'
+};
+
+let state = {
+  articleText: '', fileName: '', fileData: null, fileType: '',
+  grade: 'elementary_mid', questionCount: '10', questionType: '7mc3sa', dualText: 'yes',
+  analysisResult: '', planningResult: '', questionsRaw: '', dualRaw: '', qualityResult: ''
+};
+
+let currentStep = 0;
+const completedSteps = new Set();
+
+/* ─── Navigation ─── */
+function goStep(n) {
+  if (n > currentStep && !completedSteps.has(n - 1)) return;
+  currentStep = n;
+  document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === n));
+  document.querySelectorAll('.step-item').forEach((s, i) => {
+    s.classList.remove('active', 'done');
+    if (i === n) s.classList.add('active');
+    else if (completedSteps.has(i)) s.classList.add('done');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ─── File upload ─── */
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('檔案超過 10MB，請壓縮後再上傳。'); return; }
+  state.fileName = file.name;
+  state.fileType = file.type;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.fileData = e.target.result.split(',')[1];
+    const info = document.getElementById('fileInfo');
+    info.style.display = 'flex';
+    info.innerHTML = `<div class="file-info">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      已上傳：${file.name}
+    </div>`;
+  };
+  reader.onerror = () => alert('檔案讀取失敗，請重試。');
+  reader.readAsDataURL(file);
+}
+
+/* Drag-and-drop */
+const ua = document.getElementById('uploadArea');
+ua.addEventListener('dragover', e => { e.preventDefault(); ua.style.borderColor = 'var(--c-blue)'; });
+ua.addEventListener('dragleave', () => { ua.style.borderColor = ''; });
+ua.addEventListener('drop', e => {
+  e.preventDefault(); ua.style.borderColor = '';
+  const f = e.dataTransfer.files[0];
+  if (f) { document.getElementById('fileInput').files; const dt = new DataTransfer(); dt.items.add(f); document.getElementById('fileInput').files = dt.files; handleFile(document.getElementById('fileInput')); }
+});
+
+/* ─── API call ─── */
+async function callClaude(systemPrompt, userContent) {
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1000,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userContent }]
+  };
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await resp.json();
+  if (!data.content) throw new Error(data.error?.message || 'API 請求失敗，請確認網路連線後重試。');
+  return data.content.map(b => b.text || '').join('');
+}
+
+function buildUserContent(text, extra) {
+  if (state.fileData) {
+    const isImage = state.fileType && state.fileType.startsWith('image/');
+    const mediaType = state.fileType || 'image/jpeg';
+    if (isImage) {
+      return [
+        { type: 'image', source: { type: 'base64', media_type: mediaType, data: state.fileData } },
+        { type: 'text', text: extra || '請分析此文章。' }
+      ];
+    } else {
+      return [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: state.fileData } },
+        { type: 'text', text: extra || '請分析此文章。' }
+      ];
+    }
+  }
+  return text;
+}
+
+/* ─── STEP 1 → 2: Analysis ─── */
+async function startAnalysis() {
+  const textInput = document.getElementById('textInput').value.trim();
+  state.grade = document.getElementById('gradeLevel').value;
+  state.questionCount = document.getElementById('questionCount').value;
+  state.questionType = document.getElementById('questionType').value;
+  state.dualText = document.getElementById('dualText').value;
+
+  if (!textInput && !state.fileData) {
+    alert('請上傳文件或貼上文章內容後再繼續！');
+    return;
+  }
+  state.articleText = textInput;
+  completedSteps.add(0);
+  goStep(1);
+
+  const loadEl = document.getElementById('analysisLoading');
+  const resEl = document.getElementById('analysisResult');
+  const actEl = document.getElementById('analysisActions');
+  const errEl = document.getElementById('analysisError');
+  loadEl.style.display = 'block'; resEl.style.display = 'none'; actEl.style.display = 'none'; errEl.style.display = 'none';
+
+  const msgs = ['正在解析文本結構…', '進行 PIRLS 四層次分析…', '分析情緒曲線與敘事結構…', '整理命題元素庫…'];
+  let mi = 0;
+  const t = setInterval(() => { if (mi < msgs.length - 1) document.getElementById('analysisMsg').textContent = msgs[++mi]; }, 1800);
+
+  const sys = `你是專業的國語文文本分析AI，具備PIRLS閱讀理解與國語文素養導向命題專業。請針對文章進行完整分析，以繁體中文輸出，格式如下：
+
+【一、文本類型】
+（記敘文／說明文／議論文／新聞／廣告／混合文本，並簡述理由）
+
+【二、文章核心分析】
+• 主題：
+• 作者核心觀點：
+• 真實情境與生活連結：
+• 適合命題的關鍵段落：
+
+【三、PIRLS 四層次分析】
+▸ 層次一 提取訊息（建議 2 題）
+  可直接定位的資訊點（條列2-3項）
+
+▸ 層次二 推論訊息（建議 3 題）
+  需跨句理解的推論點（條列3項）
+
+▸ 層次三 詮釋整合（建議 3 題）
+  需整合全文才能理解的要點（條列3項）
+
+▸ 層次四 比較評估（建議 2 題）
+  需評估作者立場或寫作技巧的要點（條列2項）
+
+【四、情緒曲線】
+開頭 → 發展 → 轉折 → 結尾
+（各段主要情緒與轉折原因）
+
+【五、命題元素庫】
+• 修辭元素（如：譬喻、排比、映襯）：
+• 結構元素（如：鋪陳、對比、呼應）：
+• 觀點元素（作者立場、價值觀）：
+
+請簡潔精準，每條勿超過 40 字。`;
+
+  try {
+    const userMsg = state.fileData
+      ? buildUserContent(null, '請完整分析此文章的內容，進行國語文文本分析。')
+      : `請分析以下文章：\n\n${state.articleText}`;
+
+    const result = await callClaude(sys, userMsg);
+    clearInterval(t);
+    state.analysisResult = result;
+
+    const preview = state.articleText
+      ? state.articleText.substring(0, 150).replace(/\n+/g, ' ') + '…'
+      : `已上傳檔案：${state.fileName}`;
+    document.getElementById('textPreview').textContent = preview;
+    document.getElementById('analysisContent').textContent = result;
+    loadEl.style.display = 'none'; resEl.style.display = 'block'; actEl.style.display = 'flex';
+    completedSteps.add(1);
+  } catch(e) {
+    clearInterval(t);
+    loadEl.style.display = 'none';
+    errEl.style.display = 'block';
+    errEl.innerHTML = `<div class="error-box">分析失敗：${e.message}</div>`;
+    actEl.innerHTML = `<div class="btn-row"><button class="btn" onclick="goStep(0)">← 返回重試</button></div>`;
+    actEl.style.display = 'flex';
+  }
+}
+
+/* ─── STEP 2 → 3: Planning ─── */
+async function startPlanning() {
+  completedSteps.add(1);
+  goStep(2);
+
+  const loadEl = document.getElementById('planningLoading');
+  const resEl = document.getElementById('planningResult');
+  const actEl = document.getElementById('planningActions');
+  const errEl = document.getElementById('planningError');
+  loadEl.style.display = 'block'; resEl.style.display = 'none'; actEl.style.display = 'none'; errEl.style.display = 'none';
+
+  const gradeLabel = GRADE_LABELS[state.grade];
+  const typeLabel = { '7mc3sa': '選擇題 7 題＋簡答題 3 題', '5mc5sa': '選擇題 5 題＋簡答題 5 題', 'all_mc': '全選擇題' }[state.questionType];
+  const dualLabel = state.dualText === 'yes' ? '是（另加 3 題）' : '否';
+
+  const sys = `你是國語文閱讀素養命題老師，請根據文本分析建立完整命題藍圖，以繁體中文輸出。
+
+【命題規格】
+年級：${gradeLabel} ／ 總題數：${state.questionCount} 題 ／ 題型：${typeLabel} ／ 雙文本：${dualLabel}
+
+請輸出以下格式：
+
+【命題藍圖總表】
+（列出各題預計考測的能力與方向）
+
+【PIRLS 能力分布】
+• 層次一 提取訊息：X 題 ── 說明出題方向
+• 層次二 推論訊息：X 題 ── 說明推論角度
+• 層次三 詮釋整合：X 題 ── 說明整合重點
+• 層次四 比較評估：X 題 ── 說明評估角度
+
+【難度規劃】
+• 容易（40%）：具體設計方向
+• 中等（40%）：具體設計方向
+• 困難（20%）：具體設計方向
+
+【非連續文本規劃】
+建議第幾題加入圖表／表格／時間軸，及具體建議內容
+
+【雙文本規劃】（如啟用）
+建議對比文本類型、主題，以及比較角度
+
+【素養導向檢核】
+每題是否符合：有情境、需理解、整合資訊、連結生活、避免死背
+
+請精簡輸出，利於老師快速確認。`;
+
+  try {
+    const result = await callClaude(sys, `文本分析結果：\n\n${state.analysisResult}\n\n請建立完整命題藍圖。`);
+    state.planningResult = result;
+
+    const pirls = [
+      { label: 'L1', name: '提取訊息', count: 2, bg: 'var(--c-blue-bg)', color: 'var(--c-blue)' },
+      { label: 'L2', name: '推論訊息', count: 3, bg: 'var(--c-purple-bg)', color: 'var(--c-purple)' },
+      { label: 'L3', name: '詮釋整合', count: 3, bg: 'var(--c-amber-bg)', color: 'var(--c-amber)' },
+      { label: 'L4', name: '比較評估', count: 2, bg: 'var(--c-coral-bg)', color: 'var(--c-coral)' }
+    ];
+    document.getElementById('pirls-grid').innerHTML = pirls.map(p =>
+      `<div class="pirls-item" style="background:${p.bg}">
+        <div class="pi-label" style="color:${p.color}">${p.label}　${p.name}</div>
+        <div class="pi-count" style="color:${p.color}">${p.count}<span class="pi-unit"> 題</span></div>
+      </div>`
+    ).join('');
+
+    document.getElementById('planningContent').textContent = result;
+    loadEl.style.display = 'none'; resEl.style.display = 'block'; actEl.style.display = 'flex';
+    completedSteps.add(2);
+  } catch(e) {
+    loadEl.style.display = 'none';
+    errEl.style.display = 'block';
+    errEl.innerHTML = `<div class="error-box">規劃失敗：${e.message}</div>`;
+    actEl.innerHTML = `<div class="btn-row"><button class="btn" onclick="goStep(1)">← 返回分析</button></div>`;
+    actEl.style.display = 'flex';
+  }
+}
+
+/* ─── STEP 3 → 4: Generation ─── */
+async function startGeneration() {
+  completedSteps.add(2);
+  goStep(3);
+
+  const loadEl = document.getElementById('generationLoading');
+  const resEl = document.getElementById('generationResult');
+  const actEl = document.getElementById('generationActions');
+  const errEl = document.getElementById('generationError');
+  loadEl.style.display = 'block'; resEl.style.display = 'none'; actEl.style.display = 'none'; errEl.style.display = 'none';
+
+  const msgs = ['生成 PIRLS 層次一、二題目…', '生成層次三、四高階思考題…', '生成簡答題與評分重點…', '生成雙文本比較題…'];
+  let mi = 0;
+  const t = setInterval(() => { if (mi < msgs.length - 1) document.getElementById('genMsg').textContent = msgs[++mi]; }, 2000);
+
+  const gradeLabel = GRADE_LABELS[state.grade];
+  const mcCount = state.questionType === '7mc3sa' ? 7 : state.questionType === '5mc5sa' ? 5 : parseInt(state.questionCount);
+  const saCount = state.questionType === 'all_mc' ? 0 : parseInt(state.questionCount) - mcCount;
+
+  const sys = `你是專業國語文素養命題老師。請依照命題藍圖生成閱讀測驗，適用年級：${gradeLabel}。
+
+規格：
+- 選擇題 ${mcCount} 題＋簡答題 ${saCount} 題，共 ${state.questionCount} 題
+- PIRLS比例：層次一×2、層次二×3、層次三×3、層次四×2
+- 禁止：字詞解釋題、直接抄句可答題、模糊答案、低層次記憶題
+
+【選擇題格式】（嚴格遵守）
+═══════════════════════
+第 N 題　PIRLS 層次X｜對應能力：XXX
+━━━━━━━━━━━━━━━━━━━━━━━
+（題幹，要有情境，需思考，不可直接抄句作答）
+(A) ___
+(B) ___
+(C) ___
+(D) ___
+★ 答案：X
+📝 解析：（說明正答依據與干擾選項錯誤原因，2-3句）
+
+【簡答題格式】
+═══════════════════════
+第 N 題　PIRLS 層次X｜簡答題
+━━━━━━━━━━━━━━━━━━━━━━━
+（題幹）
+▶ 參考答案：（2-3句完整答案）
+▶ 評分重點：（條列2-3個得分關鍵）
+
+請生成全部 ${state.questionCount} 題，以繁體中文輸出。`;
+
+  try {
+    const articleSnippet = state.articleText ? state.articleText.substring(0, 1000) : '（已上傳檔案，請根據文本分析出題）';
+    const result = await callClaude(sys,
+      `文章節錄：\n${articleSnippet}\n\n文本分析：\n${state.analysisResult.substring(0, 600)}\n\n命題藍圖：\n${state.planningResult.substring(0, 500)}\n\n請生成 ${state.questionCount} 道素養導向閱讀題。`);
+
+    clearInterval(t);
+    state.questionsRaw = result;
+    document.getElementById('tab-main').innerHTML = `<div class="result-box">${result}</div>`;
+
+    if (state.dualText === 'yes') {
+      document.getElementById('dualTabBtn').style.display = '';
+      const dualSys = `你是國語文命題老師。請為以下文章設計「雙文本比較」閱讀題 3 題，假設搭配一篇觀點或立場不同的對比文本（請自行設定對比文本的主題方向）。題型：選擇題 2 題＋簡答題 1 題。格式同主要題組。適用年級：${GRADE_LABELS[state.grade]}。請以繁體中文輸出。`;
+      const dualResult = await callClaude(dualSys,
+        `原文分析：\n${state.analysisResult.substring(0, 600)}\n\n請設計 3 題雙文本比較題，說明假設的對比文本類型。`);
+      state.dualRaw = dualResult;
+      document.getElementById('tab-dual').innerHTML = `<div class="result-box">${dualResult}</div>`;
+    } else {
+      document.getElementById('dualTabBtn').style.display = 'none';
+    }
+
+    loadEl.style.display = 'none'; resEl.style.display = 'block'; actEl.style.display = 'flex';
+    completedSteps.add(3);
+  } catch(e) {
+    clearInterval(t);
+    loadEl.style.display = 'none';
+    errEl.style.display = 'block';
+    errEl.innerHTML = `<div class="error-box">出題失敗：${e.message}</div>`;
+    actEl.innerHTML = `<div class="btn-row"><button class="btn" onclick="goStep(2)">← 返回規劃</button></div>`;
+    actEl.style.display = 'flex';
+  }
+}
+
+/* ─── STEP 4 → 5: Quality ─── */
+async function startQuality() {
+  completedSteps.add(3);
+  goStep(4);
+
+  const loadEl = document.getElementById('qualityLoading');
+  const resEl = document.getElementById('qualityResult');
+  const actEl = document.getElementById('qualityActions');
+  const errEl = document.getElementById('qualityError');
+  loadEl.style.display = 'block'; resEl.style.display = 'none'; actEl.style.display = 'none'; errEl.style.display = 'none';
+
+  const sys = `你是國語文閱讀素養審題老師，請逐題審查試題品質，輸出完整審查報告，以繁體中文輸出。
+
+【整體評估】
+• PIRLS 分布：（合理／需調整，說明原因）
+• 素養導向：（明確／需加強，說明原因）
+• 難度分布：（適切／偏易／偏難）
+• 區分度：（高／中／低）
+• 是否有情境連結：（是／否）
+• 綜合評分：XX／100
+
+【逐題品質檢核】
+（每題一行，格式：第X題：✓通過 ／ ⚠需修正（問題說明）／ ✗建議重出（原因））
+
+【需修正題目】
+（列出需修正題目的修改建議及修正後版本）
+
+【品質結論】
+（3-4句整體評語，說明試卷整體品質與建議使用情境）
+
+請精簡扼要，便於老師快速判斷是否可直接使用。`;
+
+  try {
+    const result = await callClaude(sys,
+      `試題內容：\n${state.questionsRaw}\n\n文本分析：\n${state.analysisResult.substring(0, 400)}\n\n請進行完整品質審查。`);
+
+    state.qualityResult = result;
+
+    const scoreMatch = result.match(/綜合評分[：:]\s*(\d+)/);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 82;
+    const isHigh = score >= 85, isMid = score >= 70;
+    const scoreColor = isHigh ? 'var(--c-green)' : isMid ? 'var(--c-amber)' : 'var(--c-coral)';
+    const scoreBg = isHigh ? 'var(--c-green-bg)' : isMid ? 'var(--c-amber-bg)' : 'var(--c-coral-bg)';
+    const scoreMsg = isHigh ? '達到出題標準，可直接使用' : isMid ? '建議依修正建議調整後使用' : '建議審慎修正後再使用';
+
+    document.getElementById('qualityScoreCard').innerHTML = `
+      <div class="quality-score-card" style="background:${scoreBg}">
+        <div class="qs-num" style="color:${scoreColor}">${score}</div>
+        <div>
+          <div class="qs-label" style="color:${scoreColor}">品質評分 / 100</div>
+          <div class="qs-sub">${scoreMsg}</div>
+        </div>
+        <div class="qs-badges">
+          <span class="badge badge-blue">${GRADE_LABELS[state.grade]}</span>
+          <span class="badge badge-green">${state.questionCount} 題</span>
+          ${state.dualText === 'yes' ? '<span class="badge badge-amber">含雙文本</span>' : ''}
+        </div>
+      </div>`;
+
+    document.getElementById('qualityContent').textContent = result;
+    loadEl.style.display = 'none'; resEl.style.display = 'block'; actEl.style.display = 'block';
+    completedSteps.add(4);
+  } catch(e) {
+    loadEl.style.display = 'none';
+    errEl.style.display = 'block';
+    errEl.innerHTML = `<div class="error-box">驗證失敗：${e.message}</div>`;
+    actEl.innerHTML = `<div class="btn-row"><button class="btn" onclick="goStep(3)">← 返回題目</button></div>`;
+    actEl.style.display = 'flex';
+  }
+}
+
+/* ─── Tabs ─── */
+function showTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-main').style.display = name === 'main' ? 'block' : 'none';
+  document.getElementById('tab-dual').style.display = name === 'dual' ? 'block' : 'none';
+}
+
+/* ─── Export ─── */
+function exportText() {
+  const sep = '═'.repeat(50);
+  const content = [
+    '國語文素養命題系統　試題輸出報告',
+    `匯出時間：${new Date().toLocaleString('zh-TW')}`,
+    `年級：${GRADE_LABELS[state.grade]}　題數：${state.questionCount}題`,
+    sep,
+    '【文本分析】',
+    state.analysisResult,
+    sep,
+    '【命題藍圖】',
+    state.planningResult,
+    sep,
+    '【閱讀試題】',
+    state.questionsRaw,
+    state.dualRaw ? sep + '\n【雙文本比較題】\n' + state.dualRaw : '',
+    sep,
+    '【品質驗證報告】',
+    state.qualityResult
+  ].filter(Boolean).join('\n\n');
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `國語文命題_${GRADE_LABELS[state.grade]}_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'')}.txt`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function copyAll() {
+  const content = [state.questionsRaw, state.dualRaw ? '\n\n【雙文本比較題】\n' + state.dualRaw : ''].join('');
+  navigator.clipboard.writeText(content).then(() => {
+    const btn = event.currentTarget;
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 已複製！`;
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  }).catch(() => alert('複製失敗，請手動選取文字複製。'));
+}
+
+function restartAll() {
+  if (!confirm('確定要重新開始嗎？目前所有資料將清除。')) return;
+  state = { articleText: '', fileName: '', fileData: null, fileType: '', grade: 'elementary_mid', questionCount: '10', questionType: '7mc3sa', dualText: 'yes', analysisResult: '', planningResult: '', questionsRaw: '', dualRaw: '', qualityResult: '' };
+  completedSteps.clear();
+  document.getElementById('textInput').value = '';
+  document.getElementById('fileInfo').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  currentStep = 0;
+  goStep(0);
+}
+</script>
+</body>
+</html>
